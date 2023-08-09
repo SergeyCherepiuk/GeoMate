@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 class SignUpViewModel : GeoMateViewModel() {
     private val accountService = AccountService(FirebaseAuth.getInstance())
@@ -75,18 +76,16 @@ class SignUpViewModel : GeoMateViewModel() {
                     bio = bio
                 )
             )
-            launchCatching(block = {
+            launchCatching {
                 accountService.signUp(email, password)
-            })
+            }
         }
         return FirebaseAuth.getInstance().currentUser != null
     }
 
     fun isUsernameTaken(username: String): Boolean {
-        var result = false
-        launchCatching {
-            result = storageService.checkIfUsernameTaken(username)
+        return runBlocking {
+            storageService.checkIfUsernameTaken(username)
         }
-        return result
     }
 }

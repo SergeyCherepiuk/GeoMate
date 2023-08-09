@@ -78,12 +78,12 @@ fun NavGraphBuilder.signUp(
             updateUsername = viewModel::updateUsername,
             updateProfilePictureUri = viewModel::updateProfilePictureUri,
             updateBio = viewModel::updateBio,
+            checkIfUsernameTaken = viewModel::isUsernameTaken,
             onSignUpClick = viewModel::onSignUpClick,
             onFacebookClick = { /* TODO: Sign in with facebook */ },
             onGoogleClick = { /* TODO: Sign in with google */ },
             onTwitterClick = { /* TODO: Sign in with twitter */ },
             navigateToSignIn = navController::navigateToSignIn,
-            checkIfUsernameTaken = viewModel::isUsernameTaken
         )
     }
 }
@@ -119,7 +119,6 @@ fun SignUpScreen(
     var isFirstNameValid by remember { mutableStateOf(true) }
     var isLastNameValid by remember { mutableStateOf(true) }
     var isUsernameValid by remember { mutableStateOf(true) }
-    var isUsernameTaken by remember { mutableStateOf(false) }
 
     Column(
         verticalArrangement = Arrangement.SpaceBetween,
@@ -181,17 +180,15 @@ fun SignUpScreen(
                     username = uiState.username,
                     updateUsername = updateUsername,
                     isUsernameValid = isUsernameValid,
-                    updateIsUsernameValid = { isUsernameValid = it },
-                    isUsernameTaken = isUsernameTaken,
                     checkIfUsernameTaken = checkIfUsernameTaken,
-                    updateIsUsernameTaken = { isUsernameTaken = it },
+                    updateIsUsernameValid = { isUsernameValid = it },
                     next = {
                         isFirstNameValid = uiState.firstName.isFirstNameValid()
                         isLastNameValid = uiState.lastName.isLastNameValid()
-                        isUsernameValid = uiState.username.isUsernameValid()
-                        isUsernameTaken = checkIfUsernameTaken(uiState.username)
+                        isUsernameValid =
+                            uiState.username.isUsernameValid() && !checkIfUsernameTaken(uiState.username)
 
-                        if (isFirstNameValid && isLastNameValid && isUsernameValid && !isUsernameTaken) {
+                        if (isFirstNameValid && isLastNameValid && isUsernameValid) {
                             coroutineScope.launch {
                                 pagerState.animateScrollToPage(2)
                             }
@@ -324,10 +321,8 @@ private fun PublicInformationStage(
     username: String,
     updateUsername: (String) -> Unit,
     isUsernameValid: Boolean,
-    updateIsUsernameValid: (Boolean) -> Unit,
-    isUsernameTaken: Boolean,
     checkIfUsernameTaken: (String) -> Boolean,
-    updateIsUsernameTaken: (Boolean) -> Unit,
+    updateIsUsernameValid: (Boolean) -> Unit,
     next: () -> Unit,
     prev: () -> Unit,
     modifier: Modifier = Modifier,
@@ -367,7 +362,7 @@ private fun PublicInformationStage(
             leadingIcon = LeadingIcon(Icons.Outlined.Person),
             placeholder = stringResource(id = R.string.username_placeholder),
             inputValidator = InputValidator(
-                isValid = isUsernameValid && !isUsernameTaken,
+                isValid = isUsernameValid,
                 updateIsValid = updateIsUsernameValid,
                 rule = { !checkIfUsernameTaken(it) && it.isUsernameValid() }, // testing
                 errorMessage = stringResource(id = R.string.invalid_username_taken_sign_up) //testing
@@ -522,11 +517,9 @@ private fun PublicInformationStagePreview() {
             updateUsername = { },
             isUsernameValid = true,
             updateIsUsernameValid = { },
+            checkIfUsernameTaken = { false },
             next = { },
             prev = { },
-            isUsernameTaken = false,
-            updateIsUsernameTaken = { },
-            checkIfUsernameTaken = { false }
         )
     }
 }
