@@ -74,11 +74,9 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     // Authentication
-    implementation("com.google.firebase:firebase-auth-ktx:22.1.0")
-    implementation(platform("com.google.firebase:firebase-bom:32.2.0"))
-
-    // Add the dependency for the Firebase Authentication library
     implementation("com.google.firebase:firebase-auth-ktx")
+    implementation(platform("com.google.firebase:firebase-bom:32.2.0"))
+    implementation("com.google.android.gms:play-services-auth:20.6.0")
 
     // Declare the dependency for the Cloud Firestore library
     implementation("com.google.firebase:firebase-firestore-ktx")

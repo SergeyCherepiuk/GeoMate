@@ -3,8 +3,9 @@ package com.example.geomate.service
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.tasks.await
 
-class AccountService(private val auth: FirebaseAuth) {
-
+class AccountService(
+    private val auth: FirebaseAuth,
+) {
     suspend fun signIn(email: String, password: String) {
         auth.signInWithEmailAndPassword(email, password).await()
     }
@@ -16,5 +17,4 @@ class AccountService(private val auth: FirebaseAuth) {
     suspend fun sendRecoveryEmail(email: String) {
         auth.sendPasswordResetEmail(email).await()
     }
-
 }

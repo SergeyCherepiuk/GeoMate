@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 
 class SignUpViewModel : GeoMateViewModel() {
     private val accountService = AccountService(FirebaseAuth.getInstance())
-    private val storageService = StorageService(FirebaseAuth.getInstance(), FirebaseFirestore.getInstance())
+    private val storageService = StorageService(FirebaseFirestore.getInstance())
     private val _uiState = MutableStateFlow(SignUpUiState())
     val uiState: StateFlow<SignUpUiState> = _uiState.asStateFlow()
 
@@ -80,5 +80,13 @@ class SignUpViewModel : GeoMateViewModel() {
             })
         }
         return FirebaseAuth.getInstance().currentUser != null
+    }
+
+    fun isUsernameTaken(username: String): Boolean {
+        var result = false
+        launchCatching {
+            result = storageService.checkIfUsernameTaken(username)
+        }
+        return result
     }
 }

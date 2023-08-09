@@ -1,6 +1,10 @@
 package com.example.geomate.ui.screens.signin
 
 import android.content.res.Configuration
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,9 +21,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -31,6 +37,7 @@ import androidx.navigation.compose.composable
 import com.example.geomate.R
 import com.example.geomate.ext.isEmailValid
 import com.example.geomate.ext.isPasswordValid
+import com.example.geomate.service.google.GoogleAuth
 import com.example.geomate.ui.components.ButtonType
 import com.example.geomate.ui.components.Footer
 import com.example.geomate.ui.components.GeoMateButton
@@ -46,6 +53,8 @@ import com.example.geomate.ui.screens.forgotpassword.navigateToForgotPassword
 import com.example.geomate.ui.screens.signup.navigateToSignUp
 import com.example.geomate.ui.theme.GeoMateTheme
 import com.example.geomate.ui.theme.spacing
+import com.google.android.gms.auth.api.identity.Identity
+import kotlinx.coroutines.launch
 
 fun NavGraphBuilder.signIn(
     navController: NavController,
@@ -53,13 +62,43 @@ fun NavGraphBuilder.signIn(
 ) {
     composable(Destinations.SIGN_IN_ROUTE) {
         val uiState by viewModel.uiState.collectAsState()
+        val context = LocalContext.current
+
+        val googleAuth by lazy {
+            GoogleAuth(
+                oneTapClient = Identity.getSignInClient(context)
+            )
+        }
+
+        val coroutineScope = rememberCoroutineScope()
+
+        val launcher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.StartIntentSenderForResult(),
+            onResult = { activityResult ->
+                if (activityResult.resultCode == 1) {
+                    coroutineScope.launch {
+                        Log.d("SignInScreen", "coroutineScope.launch")
+                        googleAuth.signInWithIntent(intent = activityResult.data ?: return@launch)
+                    }
+                }
+            }
+        )
         SignInScreen(
             uiState = uiState,
             updateEmail = viewModel::updateEmail,
             updatePassword = viewModel::updatePassword,
             onSignInClick = viewModel::onSignInClick,
             onFacebookClick = { /* TODO: Sign in with facebook */ },
-            onGoogleClick = { /* TODO: Sign in with google */ },
+            onGoogleClick = {
+                coroutineScope.launch {
+                    val signInIntentSender = googleAuth.signIn()
+                    Log.d("SignInScreen", "${signInIntentSender?.creatorPackage}")
+                    val intentSender = IntentSenderRequest.Builder(
+                        signInIntentSender ?: return@launch
+                    ).build()
+                    launcher.launch(intentSender)
+                }
+            },
             onTwitterClick = { /* TODO: Sign in with twitter */ },
             navigateToSignUp = navController::navigateToSignUp,
             navigateToForgotPassword = navController::navigateToForgotPassword
@@ -89,7 +128,6 @@ fun SignInScreen(
 ) {
     var isEmailValid by remember { mutableStateOf(true) }
     var isPasswordValid by remember { mutableStateOf(true) }
-
     Column(
         verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = Alignment.CenterHorizontally,
