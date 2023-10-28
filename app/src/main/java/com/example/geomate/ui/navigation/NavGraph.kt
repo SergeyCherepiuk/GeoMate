@@ -16,6 +16,8 @@ import com.example.geomate.ui.screens.editprofile.EditProfileViewModel
 import com.example.geomate.ui.screens.editprofile.editProfile
 import com.example.geomate.ui.screens.forgotpassword.ForgotPasswordViewModel
 import com.example.geomate.ui.screens.forgotpassword.forgotPassword
+import com.example.geomate.ui.screens.friends.FriendsViewModel
+import com.example.geomate.ui.screens.friends.friends
 import com.example.geomate.ui.screens.groupdetails.GroupDetailsViewModel
 import com.example.geomate.ui.screens.groupdetails.groupDetails
 import com.example.geomate.ui.screens.groups.GroupsViewModel
@@ -61,6 +63,7 @@ fun NavGraph(application: Application, navController: NavHostController) {
     val searchViewModel = SearchViewModel(usersRepository)
     val groupViewModel = GroupsViewModel(usersRepository, groupsRepository)
     val groupDetailsViewModel = GroupDetailsViewModel(usersRepository, groupsRepository)
+    val friendsViewModel = FriendsViewModel(usersRepository)
     val profileViewModel = ProfileViewModel(usersRepository)
     val editProfileViewModel = EditProfileViewModel(usersRepository)
 
@@ -89,6 +92,7 @@ fun NavGraph(application: Application, navController: NavHostController) {
             search(searchViewModel, navController)
             groups(groupViewModel, navController)
             groupDetails(groupDetailsViewModel, navController)
+            friends(friendsViewModel, navController)
             profile(profileViewModel, navController)
             editProfile(editProfileViewModel, navController)
         }

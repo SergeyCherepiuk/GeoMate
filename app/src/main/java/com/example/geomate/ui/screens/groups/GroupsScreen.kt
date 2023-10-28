@@ -28,6 +28,7 @@ import com.example.geomate.ui.components.GeoMateTextField
 import com.example.geomate.ui.components.GroupRow
 import com.example.geomate.ui.components.TextFieldIcon
 import com.example.geomate.ui.navigation.Destinations
+import com.example.geomate.ui.screens.friends.navigateToFriends
 import com.example.geomate.ui.screens.groupdetails.navigateToGroupDetails
 import com.example.geomate.ui.screens.map.navigateToMap
 import com.example.geomate.ui.theme.spacing
@@ -96,7 +97,7 @@ fun GroupsScreen(
                 currentRoute = Destinations.GROUPS_ROUTE,
                 navigateToMap = navController::navigateToMap,
                 navigateToGroups = { },
-                navigateToSocial = { /* navController::navigateToSocial */ },
+                navigateToSocial = navController::navigateToFriends,
             )
         },
         modifier = modifier.background(MaterialTheme.colorScheme.background),

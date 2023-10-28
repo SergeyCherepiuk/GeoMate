@@ -24,6 +24,7 @@
     <string name="users_search_placeholder">Search for other users</string>
     <string name="groups_search_placeholder">Search for group of friends</string>
     <string name="group_details_name_placeholder">Name your group</string>
+    <string name="friends_search_placeholder">Search for a friend</string>
 
     <!--Supporting texts-->
     <string name="optional">Optional</string>

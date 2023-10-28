@@ -1,4 +1,4 @@
-package com.example.geomate.ui.screens.search
+package com.example.geomate.ui.screens.friends
 
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -19,11 +19,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.navigation.NavController
@@ -31,46 +28,40 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.example.geomate.R
 import com.example.geomate.ui.components.GeoMateTextField
-import com.example.geomate.ui.components.SearchUserRow
 import com.example.geomate.ui.components.TextFieldIcon
 import com.example.geomate.ui.navigation.Destinations
+import com.example.geomate.ui.screens.friends.components.Friend
 import com.example.geomate.ui.screens.profile.navigateToProfile
 import com.example.geomate.ui.theme.spacing
 
-fun NavGraphBuilder.search(
-    viewModel: SearchViewModel,
-    navController: NavController
+fun NavGraphBuilder.friends(
+    viewModel: FriendsViewModel,
+    navController: NavController,
 ) {
-    composable(Destinations.SEARCH_ROUTE) {
-        val searchQuery by viewModel.searchQuery.collectAsState()
+    composable(Destinations.SOCIAL_ROUTE) {
         val uiState by viewModel.uiState.collectAsState()
-        SearchScreen(
-            searchQuery = searchQuery,
+        FriendsScreen(
             uiState = uiState,
             viewModel = viewModel,
-            navController = navController
+            navController = navController,
         )
     }
 }
 
-fun NavController.navigateToSearch() {
-    navigate(Destinations.SEARCH_ROUTE) {
+fun NavController.navigateToFriends() {
+    navigate(Destinations.SOCIAL_ROUTE) {
         launchSingleTop = true
     }
 }
 
 @Composable
-fun SearchScreen(
-    searchQuery: String,
-    uiState: SearchUiState,
-    viewModel: SearchViewModel,
+fun FriendsScreen(
+    uiState: FriendsUiState,
+    viewModel: FriendsViewModel,
     navController: NavController,
 ) {
-    val searchFocusRequester = remember { FocusRequester() }
-
     LaunchedEffect(Unit) {
-        viewModel.fetchUsers()
-        searchFocusRequester.requestFocus()
+        viewModel.fetchFriends()
     }
 
     Box(
@@ -85,7 +76,7 @@ fun SearchScreen(
                 .padding(vertical = MaterialTheme.spacing.medium)
         ) {
             GeoMateTextField(
-                value = searchQuery,
+                value = uiState.searchQuery,
                 onValueChange = viewModel::updateSearchQuery,
                 leadingIcons = listOf(
                     TextFieldIcon(onClick = navController::navigateUp) {
@@ -96,11 +87,9 @@ fun SearchScreen(
                         )
                     }
                 ),
-                placeholder = stringResource(id = R.string.users_search_placeholder),
+                placeholder = stringResource(id = R.string.friends_search_placeholder),
                 imeAction = ImeAction.Search,
-                modifier = Modifier
-                    .padding(horizontal = MaterialTheme.spacing.medium)
-                    .focusRequester(searchFocusRequester)
+                modifier = Modifier.padding(horizontal = MaterialTheme.spacing.medium)
             )
 
             if (uiState.isLoading) {
@@ -110,26 +99,16 @@ fun SearchScreen(
                 ) {
                     CircularProgressIndicator()
                 }
-//            } else if (searchQuery.isBlank()) {
-//                Text(
-//                    text = "Start searching",
-//                    style = MaterialTheme.typography.bodyLarge,
-//                    color = MaterialTheme.colorScheme.onBackground
-//                )
-//            } else if (uiState.users.isEmpty()) {
-//                Text(
-//                    text = "No one found :(",
-//                    style = MaterialTheme.typography.bodyLarge,
-//                    color = MaterialTheme.colorScheme.onBackground
-//                )
             } else {
                 LazyColumn {
-                    itemsIndexed(uiState.users.keys.toList()) { index, user ->
-                        SearchUserRow(
-                            user = Pair(user, uiState.users[user] ?: Uri.EMPTY),
-                            onSelect = { navController.navigateToProfile(it.uid) }
+                    itemsIndexed(uiState.matchedFriends.keys.toList()) { index, friend ->
+                        Friend(
+                            friend = friend,
+                            profilePicture = uiState.friends[friend] ?: Uri.EMPTY,
+                            onSelect = { navController.navigateToProfile(friend.uid) },
+                            onRemove = { /* Do nothing */ }
                         )
-                        if (index < uiState.users.size - 1) {
+                        if (index < uiState.friends.size - 1) {
                             Divider(color = MaterialTheme.colorScheme.secondary)
                         }
                     }

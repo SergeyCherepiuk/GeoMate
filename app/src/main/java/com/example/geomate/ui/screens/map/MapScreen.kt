@@ -43,6 +43,7 @@ import com.example.geomate.ui.components.GeoMateTextField
 import com.example.geomate.ui.components.IconWithNotification
 import com.example.geomate.ui.components.TextFieldIcon
 import com.example.geomate.ui.navigation.Destinations
+import com.example.geomate.ui.screens.friends.navigateToFriends
 import com.example.geomate.ui.screens.groups.navigateToGroups
 import com.example.geomate.ui.screens.profile.navigateToProfile
 import com.example.geomate.ui.screens.search.navigateToSearch
@@ -152,7 +153,7 @@ fun Map(
                 currentRoute = Destinations.MAP_ROUTE,
                 navigateToMap = { },
                 navigateToGroups = navController::navigateToGroups,
-                navigateToSocial = { /* navController::navigateToSocial */ },
+                navigateToSocial = navController::navigateToFriends,
             )
         },
         modifier = modifier
