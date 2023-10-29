@@ -25,22 +25,43 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavType
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.example.geomate.R
 import com.example.geomate.ui.components.GeoMateTextField
 import com.example.geomate.ui.components.TextFieldIcon
 import com.example.geomate.ui.navigation.Destinations
 import com.example.geomate.ui.screens.friends.components.Friend
+import com.example.geomate.ui.screens.friends.components.IconButtonData
 import com.example.geomate.ui.screens.profile.navigateToProfile
 import com.example.geomate.ui.theme.spacing
 
-fun NavGraphBuilder.friends(
-    viewModel: FriendsViewModel,
+fun NavGraphBuilder.friendsList(
+    viewModel: ViewModel,
     navController: NavController,
 ) {
     composable(Destinations.SOCIAL_ROUTE) {
         val uiState by viewModel.uiState.collectAsState()
         FriendsScreen(
+            uiState = uiState,
+            viewModel = viewModel,
+            navController = navController,
+        )
+    }
+}
+
+fun NavGraphBuilder.selectFriend(
+    viewModel: ViewModel,
+    navController: NavController
+) {
+    composable(
+        "${Destinations.GROUP_SELECT_FRIEND_ROUTE}/{groupId}",
+        arguments = listOf(navArgument("groupId") { type = NavType.StringType })
+    ) { backStackEntry ->
+        val uiState by viewModel.uiState.collectAsState()
+        FriendsScreen(
+            groupId = backStackEntry.arguments?.getString("groupId") ?: "",
             uiState = uiState,
             viewModel = viewModel,
             navController = navController,
@@ -54,13 +75,21 @@ fun NavController.navigateToFriends() {
     }
 }
 
+fun NavController.navigateToSelectFriend(groupId: String) {
+    navigate("${Destinations.GROUP_SELECT_FRIEND_ROUTE}/${groupId}") {
+        launchSingleTop = true
+    }
+}
+
 @Composable
 fun FriendsScreen(
+    groupId: String? = null,
     uiState: FriendsUiState,
-    viewModel: FriendsViewModel,
+    viewModel: ViewModel,
     navController: NavController,
 ) {
     LaunchedEffect(Unit) {
+        groupId?.let { viewModel.setGroupById(it) }
         viewModel.fetchFriends()
     }
 
@@ -106,7 +135,10 @@ fun FriendsScreen(
                             friend = friend,
                             profilePicture = uiState.friends[friend] ?: Uri.EMPTY,
                             onSelect = { navController.navigateToProfile(friend.uid) },
-                            onRemove = { /* Do nothing */ }
+                            iconButtonData = IconButtonData(
+                                icon = viewModel.icon,
+                                onClick = viewModel::onIconButton
+                            )
                         )
                         if (index < uiState.friends.size - 1) {
                             Divider(color = MaterialTheme.colorScheme.secondary)

@@ -12,8 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -23,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -32,12 +31,17 @@ import com.example.geomate.ui.theme.spacing
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.fresco.FrescoImage
 
+data class IconButtonData(
+    val icon: ImageVector,
+    val onClick: (User) -> Unit,
+)
+
 @Composable
 fun Friend(
     friend: User,
     profilePicture: Uri,
     onSelect: (User) -> Unit,
-    onRemove: (User) -> Unit, // TODO: Replace with "updateMenuVisibility" later
+    iconButtonData: IconButtonData,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -82,13 +86,13 @@ fun Friend(
         Spacer(modifier = Modifier.weight(1f))
 
         IconButton(
-            onClick = { onRemove(friend) },
+            onClick = { iconButtonData.onClick(friend) },
             colors = IconButtonDefaults.iconButtonColors(
                 containerColor = MaterialTheme.colorScheme.secondary
             )
         ) {
             Icon(
-                imageVector = Icons.Outlined.Close,
+                imageVector = iconButtonData.icon,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSecondary,
             )
