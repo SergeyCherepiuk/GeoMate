@@ -75,6 +75,7 @@
     <!--Map screen-->
     <string name="map_all">All</string>
     <string name="map_new">New</string>
+    <string name="map_you">You</string>
 
     <!--Notifications screen-->
     <string name="notifications_title">Notifications</string>

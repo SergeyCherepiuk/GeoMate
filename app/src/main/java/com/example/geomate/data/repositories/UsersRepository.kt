@@ -7,7 +7,6 @@ import com.example.geomate.data.models.User
 import kotlinx.coroutines.flow.Flow
 
 class UsersRepository(private val usersDataSource: UsersDataSource) {
-    private val userFlows: MutableMap<String, Flow<User?>> = mutableMapOf()
     private val allUsersFlows: MutableMap<List<String>, Flow<List<User>>> = mutableMapOf()
     private val profilePictures: MutableMap<String, Uri> = mutableMapOf()
 
@@ -19,13 +18,7 @@ class UsersRepository(private val usersDataSource: UsersDataSource) {
         }
     }
 
-    suspend fun getSingleAsFlow(userId: String): Flow<User?> {
-        return userFlows[userId] ?: run {
-            val user = usersDataSource.getSingleAsFlow(userId)
-            userFlows[userId] = user
-            return user
-        }
-    }
+    suspend fun getSingleAsFlow(userId: String): Flow<User?> = usersDataSource.getSingleAsFlow(userId)
 
     suspend fun getSingle(userId: String): User? = usersDataSource.getSingle(userId)
 

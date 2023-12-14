@@ -4,7 +4,6 @@ import android.Manifest
 import android.app.Application
 import android.content.pm.PackageManager
 import android.os.Looper
-import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -22,14 +21,13 @@ import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraPositionState
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.Date
 
 class MapViewModel(
     application: Application,
@@ -39,6 +37,7 @@ class MapViewModel(
     private val notificationRepository: NotificationRepository,
     private val fusedLocationClient: FusedLocationProviderClient,
 ) : AndroidViewModel(application) {
+    private var locationFetchingJob: Job? = null
     private val _uiState = MutableStateFlow(MapUiState())
     val uiState: StateFlow<MapUiState> = _uiState.asStateFlow()
 
@@ -50,11 +49,10 @@ class MapViewModel(
         }
     }
 
-    fun fetchFriends() {
-        viewModelScope.launch {
+    fun startFetchingFriendsLocation() {
+        locationFetchingJob = viewModelScope.launch {
             while (true) {
                 val friends = friendshipRepository.getFriends()
-                delay(5000L)
                 _uiState.update {
                     it.copy(
                         friendsMarkers = friends.associateWith { friend ->
@@ -62,9 +60,14 @@ class MapViewModel(
                         }
                     )
                 }
-                Log.d("asdqwe", "fetchFriends: $friends")
+                delay(5000L)
             }
         }
+    }
+
+    fun stopFetchingFriendsLocation() {
+        locationFetchingJob?.cancel()
+        locationFetchingJob = null
     }
 
     fun fetchNumberOfNotifications() {
@@ -96,13 +99,13 @@ class MapViewModel(
             override fun onLocationResult(locationResult: LocationResult) {
                 locationResult.locations.lastOrNull()?.let { location ->
                     val userLocation = Location(location.latitude, location.longitude)
+                    // TODO: Launch separate a coroutine to read latest location from UiState every 5 seconds,
+                    //  because Android might send updated location more frequently (e.g. every seconds).
                     viewModelScope.launch {
                         usersRepository.updateLocation(userLocation)
                     }
                     _uiState.update {
-                        it.copy(
-                            userMarker = LatLng(location.latitude, location.longitude),
-                        )
+                        it.copy(userMarker = LatLng(location.latitude, location.longitude))
                     }
                 }
             }

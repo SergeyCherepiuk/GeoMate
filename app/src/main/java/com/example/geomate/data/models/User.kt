@@ -1,6 +1,5 @@
 package com.example.geomate.data.models
 
-import com.google.android.gms.maps.model.LatLng
 import java.util.Date
 
 data class User(

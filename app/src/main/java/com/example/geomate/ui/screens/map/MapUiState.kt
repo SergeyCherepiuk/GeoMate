@@ -2,7 +2,6 @@ package com.example.geomate.ui.screens.map
 
 import android.net.Uri
 import com.example.geomate.data.models.Group
-import com.example.geomate.data.models.Location
 import com.example.geomate.data.models.User
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
