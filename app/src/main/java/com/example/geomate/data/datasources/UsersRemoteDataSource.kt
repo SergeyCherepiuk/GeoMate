@@ -1,9 +1,11 @@
 package com.example.geomate.data.datasources
 
 import android.net.Uri
+import com.example.geomate.data.models.Location
 import com.example.geomate.data.models.User
 import com.example.geomate.ext.snapshotFlow
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.flow.Flow
@@ -94,5 +96,13 @@ class UsersRemoteDataSource(
 
     override suspend fun sendRecoveryEmail(email: String) {
         fireAuth.sendPasswordResetEmail(email).await()
+    }
+
+    override suspend fun updateLocation(location: Location) {
+        fireStore.collection("users")
+            .whereEqualTo("uid", fireAuth.uid)
+            .get().await()
+            .documents.first().reference
+            .update("location", location)
     }
 }

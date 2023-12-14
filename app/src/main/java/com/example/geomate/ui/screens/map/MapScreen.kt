@@ -2,7 +2,8 @@ package com.example.geomate.ui.screens.map
 
 import android.Manifest
 import android.graphics.Bitmap
-import android.graphics.Canvas
+import android.graphics.Picture
+import android.view.LayoutInflater
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material.icons.outlined.GpsFixed
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Search
@@ -23,19 +25,29 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.core.view.drawToBitmap
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.example.geomate.R
+import com.example.geomate.ext.toBitmap
+import com.example.geomate.ext.toPicture
+import com.example.geomate.image.BitmapComposable
+import com.example.geomate.image.toBitmap
+import com.example.geomate.image.toBitmapWithText
 import com.example.geomate.ui.components.GeoMateFAB
 import com.example.geomate.ui.components.GeoMateTextField
 import com.example.geomate.ui.components.IconWithNotification
@@ -45,9 +57,11 @@ import com.example.geomate.ui.navigation.Destinations
 import com.example.geomate.ui.screens.friends.navigateToFriends
 import com.example.geomate.ui.screens.groups.navigateToGroups
 import com.example.geomate.ui.screens.map.components.Chips
+import com.example.geomate.ui.screens.map.components.MapMarker
 import com.example.geomate.ui.screens.notifications.navigateToNotifications
 import com.example.geomate.ui.screens.profile.navigateToProfile
 import com.example.geomate.ui.screens.search.navigateToSearch
+import com.example.geomate.ui.theme.GeoMateTheme
 import com.example.geomate.ui.theme.spacing
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionsRequired
@@ -141,6 +155,7 @@ fun Map(
 
     LaunchedEffect(Unit) {
         viewModel.startMonitoringUserLocation()
+//        viewModel.fetchFriends()
     }
 
     Scaffold(
@@ -172,27 +187,53 @@ fun Map(
                 ),
             ) {
                 // TODO: Refactor this crap
-                val drawableId =
-                    if (isSystemInDarkTheme()) R.drawable.you_marker_dark
-                    else R.drawable.you_marker_light
-                val vectorDrawable = context.resources.getDrawable(drawableId, null)
-                vectorDrawable.setBounds(
-                    0,
-                    0,
-                    vectorDrawable.intrinsicWidth,
-                    vectorDrawable.intrinsicHeight
-                )
-                val bitmap = Bitmap.createBitmap(
-                    vectorDrawable.intrinsicWidth,
-                    vectorDrawable.intrinsicHeight,
-                    Bitmap.Config.ARGB_8888
-                )
-                val canvas = Canvas(bitmap)
-                vectorDrawable.draw(canvas)
+//                val userMarkerId =
+//                    if (isSystemInDarkTheme()) R.drawable.you_marker_dark
+//                    else R.drawable.you_marker_light
+//                val userMarker = context.resources.getDrawable(userMarkerId, null)
+
+//                val markerView = ComposeView(context).apply {
+//                    disposeComposition()
+//                    setContent {
+//                        GeoMateTheme {
+//                            MapMarker(fullName = "You") {
+//                                Image(imageVector = Icons.Default.GpsFixed, contentDescription = null)
+//                            }
+//                        }
+//                    }
+//                }.drawToBitmap()
+
+//                var bitmap: Bitmap? = null
+//                BitmapComposable(
+//                    onBitmapped = { b -> bitmap = b },
+//                    intSize = IntSize(500, 700) // Pixel size for output bitmap
+//                ) {
+//                    // Composable that you want to convert to a bitmap
+//                    // This scope is @Composable
+//                            MapMarker(fullName = "You") {
+//                                Image(imageVector = Icons.Default.GpsFixed, contentDescription = null)
+//                            }
+//                }
+
+                val marker = LayoutInflater.from(context).inflate(R.layout.marker, null)
+                marker.layout(0, 0, 100, 100)
+
                 Marker(
                     state = MarkerState(position = uiState.userMarker),
-                    icon = BitmapDescriptorFactory.fromBitmap(bitmap)
+                    icon = BitmapDescriptorFactory.fromBitmap(marker.drawToBitmap())
                 )
+
+//                val friendMarkerId =
+//                    if (isSystemInDarkTheme()) R.drawable.friend_marker_dark
+//                    else R.drawable.friend_marker_light
+//                val friendMarker = context.resources.getDrawable(friendMarkerId, null)
+//
+//                uiState.friendsMarkers.forEach { entry ->
+//                    Marker(
+//                        state = MarkerState(position = entry.value),
+//                        icon = BitmapDescriptorFactory.fromBitmap(markerView)
+//                    )
+//                }
             }
 
             Column(

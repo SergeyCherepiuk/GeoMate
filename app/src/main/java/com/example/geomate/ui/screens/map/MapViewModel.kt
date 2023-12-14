@@ -4,10 +4,13 @@ import android.Manifest
 import android.app.Application
 import android.content.pm.PackageManager
 import android.os.Looper
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.geomate.data.models.Group
+import com.example.geomate.data.models.Location
+import com.example.geomate.data.repositories.FriendshipRepository
 import com.example.geomate.data.repositories.GroupsRepository
 import com.example.geomate.data.repositories.NotificationRepository
 import com.example.geomate.data.repositories.UsersRepository
@@ -19,16 +22,20 @@ import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraPositionState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Date
 
 class MapViewModel(
     application: Application,
     private val groupsRepository: GroupsRepository,
     private val usersRepository: UsersRepository,
+    private val friendshipRepository: FriendshipRepository,
     private val notificationRepository: NotificationRepository,
     private val fusedLocationClient: FusedLocationProviderClient,
 ) : AndroidViewModel(application) {
@@ -39,6 +46,23 @@ class MapViewModel(
         viewModelScope.launch {
             groupsRepository.getAllAsFlow(userId).collect { groups ->
                 _uiState.update { it.copy(groups = groups.associateWith { true }.toMutableMap()) }
+            }
+        }
+    }
+
+    fun fetchFriends() {
+        viewModelScope.launch {
+            while (true) {
+                val friends = friendshipRepository.getFriends()
+                delay(5000L)
+                _uiState.update {
+                    it.copy(
+                        friendsMarkers = friends.associateWith { friend ->
+                            LatLng(friend.location.latitude, friend.location.longitude)
+                        }
+                    )
+                }
+                Log.d("asdqwe", "fetchFriends: $friends")
             }
         }
     }
@@ -71,6 +95,10 @@ class MapViewModel(
         val locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 locationResult.locations.lastOrNull()?.let { location ->
+                    val userLocation = Location(location.latitude, location.longitude)
+                    viewModelScope.launch {
+                        usersRepository.updateLocation(userLocation)
+                    }
                     _uiState.update {
                         it.copy(
                             userMarker = LatLng(location.latitude, location.longitude),

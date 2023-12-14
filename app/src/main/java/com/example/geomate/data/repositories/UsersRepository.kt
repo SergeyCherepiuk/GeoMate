@@ -2,6 +2,7 @@ package com.example.geomate.data.repositories
 
 import android.net.Uri
 import com.example.geomate.data.datasources.UsersDataSource
+import com.example.geomate.data.models.Location
 import com.example.geomate.data.models.User
 import kotlinx.coroutines.flow.Flow
 
@@ -58,4 +59,6 @@ class UsersRepository(private val usersDataSource: UsersDataSource) {
     }
 
     suspend fun sendRecoveryEmail(email: String) = usersDataSource.sendRecoveryEmail(email)
+
+    suspend fun updateLocation(location: Location) = usersDataSource.updateLocation(location)
 }
