@@ -38,6 +38,8 @@ class MapViewModel(
     private val fusedLocationClient: FusedLocationProviderClient,
 ) : AndroidViewModel(application) {
     private var locationFetchingJob: Job? = null
+    private var locationUpdatingJob: Job? = null
+    private lateinit var locationCallback: LocationCallback
     private val _uiState = MutableStateFlow(MapUiState())
     val uiState: StateFlow<MapUiState> = _uiState.asStateFlow()
 
@@ -95,13 +97,13 @@ class MapViewModel(
         val request = LocationRequest.Builder(10L)
             .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
             .build()
-        val locationCallback = object : LocationCallback() {
+        locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 locationResult.locations.lastOrNull()?.let { location ->
                     val userLocation = Location(location.latitude, location.longitude)
                     // TODO: Launch separate a coroutine to read latest location from UiState every 5 seconds,
                     //  because Android might send updated location more frequently (e.g. every seconds).
-                    viewModelScope.launch {
+                    locationUpdatingJob = viewModelScope.launch {
                         usersRepository.updateLocation(userLocation)
                     }
                     _uiState.update {
@@ -126,7 +128,9 @@ class MapViewModel(
     }
 
     fun stopMonitoringUserLocation() {
-        // TODO: Implement (currently not needed)
+        fusedLocationClient.removeLocationUpdates(locationCallback)
+        locationUpdatingJob?.cancel()
+        locationUpdatingJob = null
     }
 
     fun toggleGroup(group: Group) {

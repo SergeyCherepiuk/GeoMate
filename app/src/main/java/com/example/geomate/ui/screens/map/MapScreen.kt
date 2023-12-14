@@ -138,13 +138,13 @@ fun Map(
     val context = LocalContext.current
     val mapStyleId = if (isSystemInDarkTheme()) R.raw.map_style_dark else R.raw.map_style_light
 
-    LaunchedEffect(Unit) {
-        viewModel.startMonitoringUserLocation()
-    }
-
     LifecycleStartEffect(Unit) {
+        viewModel.startMonitoringUserLocation()
         viewModel.startFetchingFriendsLocation()
-        onStopOrDispose { viewModel.stopFetchingFriendsLocation() }
+        onStopOrDispose {
+            viewModel.stopMonitoringUserLocation() // TODO: Move this to repository and call this on log out
+            viewModel.stopFetchingFriendsLocation()
+        }
     }
 
     Scaffold(
