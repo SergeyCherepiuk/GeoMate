@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
@@ -23,18 +22,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.example.geomate.R
-import com.example.geomate.ui.components.GeoMateFAB
 import com.example.geomate.ui.components.GeoMateTextField
 import com.example.geomate.ui.components.TextFieldIcon
 import com.example.geomate.ui.components.bottomnavbar.BottomNavigationBar
 import com.example.geomate.ui.navigation.Destinations
 import com.example.geomate.ui.screens.friends.components.Friend
-import com.example.geomate.ui.screens.groupdetails.navigateToGroupDetails
 import com.example.geomate.ui.screens.groups.navigateToGroups
 import com.example.geomate.ui.screens.map.navigateToMap
 import com.example.geomate.ui.screens.profile.navigateToProfile
@@ -89,13 +85,6 @@ fun FriendsScreen(
                 imeAction = ImeAction.Search,
                 modifier = Modifier.padding(MaterialTheme.spacing.medium)
             )
-        },
-        floatingActionButton = {
-            GeoMateFAB(
-                icon = Icons.Outlined.Add,
-                containerColor = MaterialTheme.colorScheme.secondary,
-                elevation = 2.dp
-            ) { navController.navigateToGroupDetails("") }
         },
         bottomBar = {
             BottomNavigationBar(

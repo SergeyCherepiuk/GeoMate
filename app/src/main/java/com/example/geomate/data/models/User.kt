@@ -9,5 +9,6 @@ data class User(
     val firstName: String = "",
     val lastName: String = "",
     val bio: String = "",
+    val location: Location = Location(0.0, 0.0),
     val joined: Date = Date(),
 )
