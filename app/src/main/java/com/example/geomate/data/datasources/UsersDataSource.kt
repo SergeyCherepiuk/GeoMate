@@ -1,6 +1,7 @@
 package com.example.geomate.data.datasources
 
 import android.net.Uri
+import com.example.geomate.data.models.Location
 import com.example.geomate.data.models.User
 import kotlinx.coroutines.flow.Flow
 
@@ -19,4 +20,6 @@ interface UsersDataSource {
     suspend fun getProfilePicture(userId: String): Uri
     suspend fun addProfilePicture(userId: String, uri: Uri)
     suspend fun sendRecoveryEmail(email: String)
+
+    suspend fun updateLocation(location: Location)
 }

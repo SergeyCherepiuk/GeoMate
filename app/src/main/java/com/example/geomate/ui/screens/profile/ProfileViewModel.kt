@@ -10,6 +10,7 @@ import com.example.geomate.data.repositories.UsersRepository
 import com.example.geomate.statemachine.FriendshipState
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,6 +21,7 @@ class ProfileViewModel(
     private val usersRepository: UsersRepository,
     private val friendshipRepository: FriendshipRepository,
 ) : ViewModel() {
+    private var fetchingUserJob: Job? = null
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
@@ -27,15 +29,22 @@ class ProfileViewModel(
         _uiState.update { it.copy(profilePictureUri = usersRepository.getProfilePicture(userId)) }
     }
 
-    fun fetchUser(userId: String) = viewModelScope.launch {
-        _uiState.update { it.copy(isLoading = true) }
-        usersRepository.getSingleAsFlow(userId).collect { userOrNull ->
-            userOrNull?.let { user ->
-                _uiState.update {
-                    it.copy(user = user, isLoading = false)
+    fun startFetchingUser(userId: String) {
+        fetchingUserJob = viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            usersRepository.getSingleAsFlow(userId).collect { userOrNull ->
+                userOrNull?.let { user ->
+                    _uiState.update {
+                        it.copy(user = user, isLoading = false)
+                    }
                 }
             }
         }
+    }
+
+    fun stopFetchingUser() {
+        fetchingUserJob?.cancel()
+        fetchingUserJob = null
     }
 
     fun fetchFriendship(userId: String) = viewModelScope.launch {

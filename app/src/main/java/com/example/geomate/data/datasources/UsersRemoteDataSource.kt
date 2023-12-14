@@ -1,6 +1,8 @@
 package com.example.geomate.data.datasources
 
 import android.net.Uri
+import android.util.Log
+import com.example.geomate.data.models.Location
 import com.example.geomate.data.models.User
 import com.example.geomate.ext.snapshotFlow
 import com.google.firebase.auth.FirebaseAuth
@@ -19,7 +21,10 @@ class UsersRemoteDataSource(
         .collection("users")
         .whereEqualTo("uid", userId)
         .snapshotFlow()
-        .map { it.toObjects(User::class.java).firstOrNull() }
+        .map {
+            val objects = it.toObjects(User::class.java)
+            Log.d("asdqwe", "getSingleAsFlow: $objects")
+                objects.firstOrNull() }
 
     override suspend fun getAllAsFlow(usersIds: List<String>): Flow<List<User>> = fireStore
         .collection("users")
@@ -94,5 +99,13 @@ class UsersRemoteDataSource(
 
     override suspend fun sendRecoveryEmail(email: String) {
         fireAuth.sendPasswordResetEmail(email).await()
+    }
+
+    override suspend fun updateLocation(location: Location) {
+        fireStore.collection("users")
+            .whereEqualTo("uid", fireAuth.uid)
+            .get().await()
+            .documents.first().reference
+            .update("location", location)
     }
 }

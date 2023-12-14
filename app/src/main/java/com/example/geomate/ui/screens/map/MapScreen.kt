@@ -1,8 +1,6 @@
 package com.example.geomate.ui.screens.map
 
 import android.Manifest
-import android.graphics.Bitmap
-import android.graphics.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -32,6 +30,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -45,6 +44,7 @@ import com.example.geomate.ui.navigation.Destinations
 import com.example.geomate.ui.screens.friends.navigateToFriends
 import com.example.geomate.ui.screens.groups.navigateToGroups
 import com.example.geomate.ui.screens.map.components.Chips
+import com.example.geomate.ui.screens.map.components.Marker
 import com.example.geomate.ui.screens.notifications.navigateToNotifications
 import com.example.geomate.ui.screens.profile.navigateToProfile
 import com.example.geomate.ui.screens.search.navigateToSearch
@@ -52,14 +52,13 @@ import com.example.geomate.ui.theme.spacing
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionsRequired
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerComposable
 import com.google.maps.android.compose.MarkerState
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.fresco.FrescoImage
@@ -139,8 +138,13 @@ fun Map(
     val context = LocalContext.current
     val mapStyleId = if (isSystemInDarkTheme()) R.raw.map_style_dark else R.raw.map_style_light
 
-    LaunchedEffect(Unit) {
+    LifecycleStartEffect(Unit) {
         viewModel.startMonitoringUserLocation()
+        viewModel.startFetchingFriendsLocation()
+        onStopOrDispose {
+            viewModel.stopMonitoringUserLocation() // TODO: Move this to repository and call this on log out
+            viewModel.stopFetchingFriendsLocation()
+        }
     }
 
     Scaffold(
@@ -171,28 +175,25 @@ fun Map(
                     mapStyleOptions = MapStyleOptions.loadRawResourceStyle(context, mapStyleId)
                 ),
             ) {
-                // TODO: Refactor this crap
-                val drawableId =
-                    if (isSystemInDarkTheme()) R.drawable.you_marker_dark
-                    else R.drawable.you_marker_light
-                val vectorDrawable = context.resources.getDrawable(drawableId, null)
-                vectorDrawable.setBounds(
-                    0,
-                    0,
-                    vectorDrawable.intrinsicWidth,
-                    vectorDrawable.intrinsicHeight
-                )
-                val bitmap = Bitmap.createBitmap(
-                    vectorDrawable.intrinsicWidth,
-                    vectorDrawable.intrinsicHeight,
-                    Bitmap.Config.ARGB_8888
-                )
-                val canvas = Canvas(bitmap)
-                vectorDrawable.draw(canvas)
-                Marker(
-                    state = MarkerState(position = uiState.userMarker),
-                    icon = BitmapDescriptorFactory.fromBitmap(bitmap)
-                )
+                MarkerComposable(state = MarkerState(position = uiState.userMarker)) {
+                    Marker(stringResource(id = R.string.map_you))
+                }
+
+                // BUG: When navigating to profile screen full name and username changes!
+                uiState.friendsMarkers.forEach { entry ->
+                    MarkerComposable(
+                        state = MarkerState(position = entry.value),
+                        onClick = {
+                            navController.navigateToProfile(entry.key.uid)
+                            false
+                        }
+                    ) {
+                        Marker(
+                            text = entry.key.firstName,
+                            timestamp = entry.key.location.timestamp
+                        )
+                    }
+                }
             }
 
             Column(

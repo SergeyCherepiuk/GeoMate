@@ -50,6 +50,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
@@ -113,8 +114,12 @@ fun ProfileScreen(
     }
     LaunchedEffect(Unit) {
         viewModel.fetchProfilePicture(userId)
-        viewModel.fetchUser(userId)
         viewModel.fetchFriendship(userId)
+    }
+
+    LifecycleStartEffect(Unit) {
+        viewModel.startFetchingUser(userId)
+        onStopOrDispose { viewModel.stopFetchingUser() }
     }
 
     Scaffold(
@@ -221,54 +226,55 @@ fun ProfileScreen(
             ) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
-        } else {
+            return@Scaffold
+        }
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraLarge),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.secondary)
+                .padding(it)
+                .padding(30.dp)
+        ) {
             Column(
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraLarge),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.secondary)
-                    .padding(it)
-                    .padding(30.dp)
             ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    val drawableId =
-                        if (isSystemInDarkTheme()) R.drawable.profile_picture_placeholder_dark
-                        else R.drawable.profile_picture_placeholder_light
+                val drawableId =
+                    if (isSystemInDarkTheme()) R.drawable.profile_picture_placeholder_dark
+                    else R.drawable.profile_picture_placeholder_light
 
-                    FrescoImage(
-                        imageUrl = uiState.profilePictureUri.toString(),
-                        failure = {
-                            Image(
-                                painter = painterResource(id = drawableId),
-                                contentDescription = null
-                            )
-                        },
-                        imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                        modifier = Modifier
-                            .size(165.dp)
-                            .clip(CircleShape)
-                    )
+                FrescoImage(
+                    imageUrl = uiState.profilePictureUri.toString(),
+                    failure = {
+                        Image(
+                            painter = painterResource(id = drawableId),
+                            contentDescription = null
+                        )
+                    },
+                    imageOptions = ImageOptions(contentScale = ContentScale.Crop),
+                    modifier = Modifier
+                        .size(165.dp)
+                        .clip(CircleShape)
+                )
 
-                    Text(
-                        text = "${uiState.user.firstName} ${uiState.user.lastName}",
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = MaterialTheme.colorScheme.onSecondary
-                    )
-                }
-
-                if (Firebase.auth.uid != userId) {
-                    Buttons(
-                        userId = userId,
-                        friendshipState = viewModel.createFriendshipState()
-                    )
-                }
-
-                Info(uiState.user)
+                Text(
+                    text = "${uiState.user.firstName} ${uiState.user.lastName}",
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = MaterialTheme.colorScheme.onSecondary
+                )
             }
+
+            if (Firebase.auth.uid != userId) {
+                Buttons(
+                    userId = userId,
+                    friendshipState = viewModel.createFriendshipState()
+                )
+            }
+
+            Info(uiState.user)
         }
     }
 }
